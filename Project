@@ -1,0 +1,55 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+def prediction(test):
+    y_pred = model.predict(test)
+    y_pred = np.argmax(y_pred, axis = 1) + 65 #ARGMAX Returns the predicted 
+    for index in  y_pred:
+        print(chr(index))
+        
+    return chr(index)
+        
+
+train_dataset = pd.read_csv('emnist-letters-train.csv', header = None)#No headers because our dataset does not contain headers
+test_dataset = pd.read_csv('emnist-letters-test.csv', header = None)
+
+train_labels = train_dataset.iloc[:, 0 ].values #Dependent variable ==> Y-axis #Here we take the labels of the first column
+#iloc selects the rows and columns with .values in order to convert to NUMPY ARRAY
+train_values = train_dataset.iloc[:, 1:].values #Independent variable ==> X-axis #Here we take the images
+
+test_labels = test_dataset.iloc[:, 0].values #Same job for the train but for the test
+test_values = test_dataset.iloc[:, 1:].values #Same
+
+#--------------------------------------------------------------------------------
+del train_dataset, test_dataset #no need for them, to restore some memory space
+#--------------------------------------------------------------------------------
+from sklearn.preprocessing import LabelBinarizer
+lb = LabelBinarizer() 
+train_labels = lb.fit_transform(train_labels)#Categorizing Data to pass into fit function
+test_labels = lb.fit_transform(test_labels)  #Categorizing Data to be uniformed for modelling (Dummy Columns)
+#--------------------------------------------------------------------------------
+from keras.models import Sequential
+from keras.layers import Dense
+
+model = Sequential() #Initializing the model
+#Making the hidden layers inside our Artificial Neural Network.
+model.add(Dense(64, init = 'uniform', activation='relu', input_dim=784))#First Hidden Layer, 64 Neurons, Relu Activation fn.
+model.add(Dense(64, init = 'uniform', activation='relu'))#Second Hidden Layer,64 Neurons, Relu Activation fn.
+model.add(Dense(26, init = 'uniform', activation='softmax'))#Output layer,26 Neurons, softmax activation fn.
+#Compiling the model to start training the model:
+#Using the optimizer 'ADAM', Loss of Categorical Crossentropy, Metrics of the accuracy
+#ADAM: Takes the backpropagation in order to improve the accuracy of the nerual networks.
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+#Loss: Drops not suitable data from the neural network
+#Starting the training of the neural networks.
+model.fit(train_values, train_labels, batch_size = 32, nb_epoch = 10)
+#DONE
+#--------------------------------------------------------------------------------
+def show_img(img,index):
+    flipped = np.transpose(img[index,0:].reshape(28,28),axes=[1,0])
+    plt.title('Label: '+str(prediction(img[index-1:index])))
+    plt.imshow(flipped,cmap='Greys_r')
+    
+show_img(test_values,234)
+#--------------------------------------------------------------------------------
